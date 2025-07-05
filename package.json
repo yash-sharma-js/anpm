@@ -1,9 +1,12 @@
 {
   "name": "anpm",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "anpm.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin":{
+    "anpm": "./bin/anpm.js"
   },
   "keywords": [],
   "author": "",
