@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 
 const { Command } = require("commander");
-const { setPreset, getPreset } = require("../lib/config");
+const { setPreset, getPreset, loadConfig, removePreset } = require("../lib/config");
+const { createProject } = require("../lib/installer");
+const chalk = require("chalk");
+
 const program = new Command();
 
 program
@@ -16,7 +19,7 @@ program
   .requiredOption("-t, --tools <tools...>", "List of tools to install")
   .action((options) => {
     setPreset(options.name, options.tools);
-    console.log(`✅ Preset "${options.name}" saved with tools: ${options.tools.join(", ")}`);
+    console.log(chalk.green(`✅ Preset "${options.name}" saved with tools: ${options.tools.join(", ")}`));
   });
 
 
@@ -26,12 +29,36 @@ program
   .action((preset) => {
     const tools = getPreset(preset);
     if (!tools) {
-      console.error(`❌ Preset "${preset}" not found`);
+      console.error(chalk.red(`❌ Preset "${preset}" not found`));
       process.exit(1);
     }
     console.log(`🚀 Creating project with preset "${preset}": ${tools.join(", ")}`);
-    // TODO: call installer here
-});
+    createProject(preset, tools);
+  });
+
+  program
+  .command("list")
+  .description("List all saved presets")
+  .action(() => {
+    const config = loadConfig();
+    const keys = Object.keys(config);
+    if (keys.length === 0) {
+      console.log(chalk.yellow("⚠️  No presets saved yet."));
+      return;
+    }
+    console.log(chalk.cyan("📄 Saved presets:"));
+    keys.forEach((key) => {
+      console.log(chalk.green(`• ${key}: `) + chalk.white(config[key].join(", ")));
+    });
+  });
+
+program
+  .command("remove <name>")
+  .description("Remove a saved preset")
+  .action((name) => {
+    removePreset(name);
+    console.log(chalk.green(`✅ Preset "${name}" removed successfully`));
+  });
 
 
 program.parse(process.argv);
