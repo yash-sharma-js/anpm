@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const { Command } = require("commander");
-const { setPreset, getPreset, loadConfig, removePreset } = require("../lib/config");
+const { setPreset, saveConfig, getPreset, loadConfig, removePreset } = require("../lib/config");
 const { createProject } = require("../lib/installer");
 const chalk = require("chalk");
 
@@ -14,12 +14,18 @@ program
 
 program
   .command("set")
-  .description("Save a preset with tools")
   .requiredOption("--name <name>", "Preset name")
-  .requiredOption("-t, --tools <tools...>", "List of tools to install")
+  .requiredOption("--type <type>", "Project type (npm/react/angular/vite)")
+  .option("-t, --tools <tools...>", "Tools to install")
+  .description("Save a preset")
   .action((options) => {
-    setPreset(options.name, options.tools);
-    console.log(chalk.green(`✅ Preset "${options.name}" saved with tools: ${options.tools.join(", ")}`));
+    const config = loadConfig();
+    config[options.name] = {
+      type: options.type,
+      tools: options.tools || []
+    };
+    saveConfig(config);
+    console.log(chalk.green(`✅ Preset "${options.name}" saved with type: ${options.type} and tools: ${options.tools?.join(", ") || "none"}`));
   });
 
 
@@ -27,16 +33,20 @@ program
   .argument("<preset>", "Preset name to use")
   .description("Create a project using a saved preset")
   .action((preset) => {
-    const tools = getPreset(preset);
-    if (!tools) {
+    const presetConfig = getPreset(preset);
+    if (!presetConfig) {
       console.error(chalk.red(`❌ Preset "${preset}" not found`));
       process.exit(1);
     }
-    console.log(`🚀 Creating project with preset "${preset}": ${tools.join(", ")}`);
-    createProject(preset, tools);
+
+    const { type, tools } = presetConfig;
+
+    console.log(`🚀 Creating project with preset "${preset}" of type "${type}" and tools: ${tools.join(", ") || "none"}`);
+    createProject(preset, type, tools);
   });
 
-  program
+
+program
   .command("list")
   .description("List all saved presets")
   .action(() => {
@@ -48,9 +58,15 @@ program
     }
     console.log(chalk.cyan("📄 Saved presets:"));
     keys.forEach((key) => {
-      console.log(chalk.green(`• ${key}: `) + chalk.white(config[key].join(", ")));
+      const preset = config[key];
+      console.log(
+        chalk.green(`• ${key}: `) +
+        chalk.blue(`type: ${preset.type} `) +
+        chalk.white(`tools: ${preset.tools.join(", ") || "none"}`)
+      );
     });
   });
+
 
 program
   .command("remove <name>")

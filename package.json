@@ -1,5 +1,5 @@
 {
-  "name": "anpm",
+  "name": "@srmx/anpm",
   "version": "1.0.0",
   "main": "anpm.js",
   "scripts": {
@@ -9,8 +9,8 @@
     "anpm": "./bin/anpm.js"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Yash Sharma <",
+  "license": "MIT",
   "description": "",
   "dependencies": {
     "chalk": "^4.1.2",
